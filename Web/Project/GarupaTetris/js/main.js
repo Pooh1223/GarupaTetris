@@ -7,35 +7,39 @@ const Height = 12;
 
 //first two row for negative position situation
 
-const Board = [
-	[0,0,0,0,0,0,0],
-	[0,0,0,0,0,0,0],
-	[0,0,0,0,0,0,0],
-	[0,0,0,0,0,0,0],
-	[0,0,0,0,0,0,0],
-	[0,0,0,0,0,0,0],
-	[0,0,0,0,0,0,0],
-	[0,0,0,0,0,0,0],
-	[0,0,0,0,0,0,0],
-	[0,0,0,0,0,0,0],
-	[0,0,0,0,0,0,0],
-	[0,0,0,0,0,0,0]
-];
+const Board = [];
+const BlockId = [];
 
-var BoardLink = [];
 
 function init(){
 	for(let i = 0;i < 12;++i){
-		BoardLink.push([]);
+		Board.push([]);
 
-		if(i > 1){
-			for(let j = 0;j < 7;++j){
+		for(let j = 0;j < 7;++j){
+			Board[i].push({
+				blockId : 0,
+				colorId : 0,
+				link : null
+			});
+
+			if(i > 1){
 				var gridId = 'grid_';
 
-				BoardLink[i][j] = document.getElementById(gridId + String((i - 2) * 7 + j + 1));
+				Board[i][j].link = document.getElementById(gridId + String((i - 2) * 7 + j + 1));
 			}
 		}
-		
+	}
+
+	for(let i = 0;i < 45;++i){
+		BlockId.push(0);
+	}
+}
+
+function giveBlockId(){
+	for(let i = 1;i < 45;++i){
+		if(BlockId[i] == 0){
+			return i;
+		}
 	}
 }
 
@@ -50,6 +54,7 @@ function createNewBlock(){
 		first : {x : 0,y : 3},
 		second : {x : 1,y : 3},
 		colorId : giveColor(),
+		blockId : giveBlockId(),
 		type : 0,
 		firstTurn : true
 	};
@@ -62,7 +67,7 @@ function checkAlive(nowHeight){
 		for(let i = 0;i < 2;++i){
 			for(let j = 0;j < Height;++j){
 				//Game over
-				if(Board[i][j] != 0) return false;
+				if(Board[i][j].colorId != 0) return false;
 			}
 		}
 	}
@@ -73,25 +78,30 @@ function dropping(block){
 		first : {x : block.first.x,y : block.first.y},
 		second : {x : block.second.x,y : block.second.y},
 		colorId : block.colorId,
+		blockId : block.blockId,
 		type : block.type,
-		firstTurn : true
 	};
 
 	if(block.type == 0){
 		//vertivcal
 
-		if(block.second.x + 1 >= Height || Board[block.second.x + 1][block.second.y] != 0){
+		if(block.first.x + 1 >= Height || block.second.x + 1 >= Height
+			|| Board[block.first.x + 1][block.first.y].colorId != 0
+			|| Board[block.second.x + 1][block.second.y].colorId != 0){
 			//hit the bottom or block
 
-			if(block.first.x <= 1){
+			if(block.first.x <= 1 || block.second.x <= 1){
 				alert('you lose the game!');
 				clearInterval(window.refreshId);
 			} else {
 				console.log('1\n\n');
 				updateBoard(oldBlock,block);
 
-				Board[block.first.x][block.first.y] = block.colorId + 1;
-				Board[block.second.x][block.second.y] = block.colorId + 1;
+				Board[block.first.x][block.first.y].colorId = block.colorId + 1;
+				Board[block.second.x][block.second.y].colorId = block.colorId + 1;
+
+				Board[block.first.x][block.first.y].blockId = block.blockId;
+				Board[block.second.x][block.second.y].blockId = block.blockId;
 
 				clearInterval(window.refreshId);
 				gameProcess();
@@ -125,7 +135,9 @@ function dropping(block){
 	} else {
 		//horizontal
 
-		if(block.second.x + 1 >= Height || Board[block.second.x + 1][block.second.y] != 0){
+		if(block.first.x + 1 >= Height || block.second.x + 1 >= Height
+			|| Board[block.first.x + 1][block.first.y].colorId != 0
+			|| Board[block.second.x + 1][block.second.y].colorId != 0){
 			//hit the bottom or block
 
 			if(block.first.x <= 1){
@@ -134,8 +146,11 @@ function dropping(block){
 			} else {
 				updateBoard(oldBlock,block);
 
-				Board[block.first.x][block.first.y] = block.colorId + 1;
-				Board[block.second.x][block.second.y] = block.colorId + 1;
+				Board[block.first.x][block.first.y].colorId = block.colorId + 1;
+				Board[block.second.x][block.second.y].colorId = block.colorId + 1;
+
+				Board[block.first.x][block.first.y].blockId = block.blockId;
+				Board[block.second.x][block.second.y].blockId = block.blockId;
 
 				clearInterval(window.refreshId);
 				gameProcess();
@@ -156,45 +171,171 @@ function dropping(block){
 	
 }
 
-function updateBoard(oldBlock,block){
-	//clear old block's color
-	// console.log('old:\n')
-	// console.log(oldBlock.first.x);
-	// console.log(oldBlock.first.y);
-	// console.log(oldBlock.second.x);
-	// console.log(oldBlock.second.y + '\n\n');
+function moving(block,keyCode){
+	let oldBlock = {
+		first : {x : block.first.x,y : block.first.y},
+		second : {x : block.second.x,y : block.second.y},
+		colorId : block.colorId,
+		blockId : block.blockId,
+		type : block.type,
+	};
 
-	// console.log('new:\n')
-	// console.log(block.first.x);
-	// console.log(block.first.y);
-	// console.log(block.second.x);
-	// console.log(block.second.y + '\n\n');
+	if(keyCode == 37 || keyCode == 39){
+		//left , right
+
+		if(block.type == 0){
+			//vertical
+			if(keyCode == 37){
+				if(block.first.y == 0 || Board[block.first.x][block.first.y - 1].colorId != 0
+					|| Board[block.second.x][block.second.y - 1].colorId != 0){
+
+					//wall or already had block there
+
+				} else {
+					block.first.y -= 1;
+					block.second.y -= 1;
+
+					updateBoard(oldBlock,block);
+				}
+			} else {
+				if(block.first.y == Width - 1 || Board[block.first.x][block.first.y + 1].colorId != 0
+					|| Board[block.second.x][block.second.y + 1].colorId != 0){
+
+					//wall or already had block there
+
+				} else {
+					block.first.y += 1;
+					block.second.y += 1;
+
+					updateBoard(oldBlock,block);
+				}
+			}
+		} else {
+			//horizontal
+
+			if(keyCode == 37){
+				if(block.first.y == 0 || Board[block.first.x][block.first.y - 1].colorId != 0
+					|| Board[block.second.x][block.second.y - 1].colorId != 0){
+
+					//wall or already had block there
+
+				} else {
+					block.first.y -= 1;
+					block.second.y -= 1;
+
+					updateBoard(oldBlock,block);
+				}
+			} else {
+				if(block.first.y == Width - 1 || Board[block.first.x][block.first.y + 1].colorId != 0
+					|| Board[block.second.x][block.second.y + 1].colorId != 0){
+
+					//wall or already had block there
+
+				} else {
+					block.first.y += 1;
+					block.second.y += 1;
+
+					updateBoard(oldBlock,block);
+				}
+			}
+		}
+
+	} else if(keyCode == 38){
+		//up
+	} else if(keyCode == 40){
+		//down
+		dropping(block);
+	}
+}
+
+function rotating(block){
+	let oldBlock = {
+		first : {x : block.first.x,y : block.first.y},
+		second : {x : block.second.x,y : block.second.y},
+		colorId : block.colorId,
+		blockId : block.blockId,
+		type : block.type,
+	};
+
+	if(block.type == 0){
+		if(block.first.x < block.second.x){
+			if(block.first.y != Width - 1 && Board[block.first.x][block.first.y + 1].colorId == 0){
+				block.type = 1;
+				block.second.x = block.first.x;
+				block.second.y = block.first.y + 1;
+
+				updateBoard(oldBlock,block);
+			}
+		} else {
+			if(block.first.y != 0 && Board[block.first.x][block.first.y - 1].colorId == 0){
+				block.type = 1;
+				block.second.x = block.first.x;
+				block.second.y = block.first.y - 1;
+
+				updateBoard(oldBlock,block);
+			}
+		}
+	} else {
+		if(block.first.y < block.second.y){
+			if(block.first.x != 0 && Board[block.first.x - 1][block.first.y].colorId == 0){
+				block.type = 0;
+
+				block.second.x = block.first.x - 1;
+				block.second.y = block.first.y;
+
+				updateBoard(oldBlock,block);
+			}
+		} else {
+			if(block.first.x != Height - 1 && Board[block.first.x + 1][block.first.y].colorId == 0){
+				block.type = 0;
+
+				block.second.x = block.first.x + 1;
+				block.second.y = block.first.y;
+
+				updateBoard(oldBlock,block);
+			}
+		}
+		
+	}
+}
+
+function updateBoard(oldBlock,block){
 
 	if(oldBlock.first.x > 1){
-		BoardLink[oldBlock.first.x][oldBlock.first.y].style.backgroundColor = '#FFFFFF';
+		Board[oldBlock.first.x][oldBlock.first.y].link.style.backgroundColor = '#FFFFFF';
 	}
 
 	if(oldBlock.second.x > 1){
-		BoardLink[oldBlock.second.x][oldBlock.second.y].style.backgroundColor = '#FFFFFF';
+		Board[oldBlock.second.x][oldBlock.second.y].link.style.backgroundColor = '#FFFFFF';
 	} 
 
 	//paint new block's color
 	if(block.first.x > 1){
-		BoardLink[block.first.x][block.first.y].style.backgroundColor = colors[block.colorId];
+		Board[block.first.x][block.first.y].link.style.backgroundColor = colors[block.colorId];
 	}
 	
 	if(block.second.x > 1){
-		BoardLink[block.second.x][block.second.y].style.backgroundColor = colors[block.colorId];
+		Board[block.second.x][block.second.y].link.style.backgroundColor = colors[block.colorId];
 	}	
 }
 
 function gameProcess(){
-	let block = Object.assign({},createNewBlock());
+	window.BLOCK = Object.assign({},createNewBlock());
 	let again = true;
 
-	window.refreshId = setInterval(dropping,1500,block);
+	window.refreshId = setInterval(dropping,1500,BLOCK);
 	
 }
+
+window.addEventListener('keydown',function(key){
+	console.log(key.keyCode);
+	if(key.keyCode >= 37 && key.keyCode <= 40){
+		moving(BLOCK,key.keyCode);
+	} else if(key.keyCode == 32){
+		rotating(BLOCK);
+	}
+	//pause(?)
+})
 
 init();
 
