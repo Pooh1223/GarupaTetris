@@ -1,9 +1,10 @@
-const colors = ['#FF5151','#AE00AE','#0000C6','#02C874','#FF8000','#F9F900','#5B5B5B']
+const colors = ['#FFFFFF','#FF5151','#AE00AE','#0000C6','#02C874','#FF8000','#F9F900','#5B5B5B']
 //red,purple,blue,green,orange,yellow,gray
 
 //height,width per layer
 const Width = 7;
 const Height = 12;
+var finish = true;
 
 //first two row for negative position situation
 
@@ -49,7 +50,7 @@ function giveBlockId(){
 
 function giveColor(){
 	let index = Math.floor(Math.random() * Math.floor(7));
-	return index;
+	return index + 1;
 }
 
 function createNewBlock(){
@@ -161,7 +162,9 @@ function droppingAfterClear(){
 					let tx = i + dx[k];
 					let ty = j + dy[k];
 
-					if(boom(tx,ty) == false && Board[tx][ty].blockId == Board[i][j].blockId){
+					if(boom(tx,ty) == false && Board[tx][ty].blockId == Board[i][j].blockId
+						&& Board[tx][ty].colorId == Board[i][j].colorId){
+
 						let tmpBlock = {
 							first : {x : 0,y : 0},
 							second : {x : 0,y : 0},
@@ -177,14 +180,21 @@ function droppingAfterClear(){
 							tmpBlock.first.y = j;
 							tmpBlock.second.x = tx;
 							tmpBlock.second.y = ty;
-						} else if(Board[tx][ty].number == 1 && Board[i][j] == 2){
+						} else if(Board[tx][ty].number == 1 && Board[i][j].number == 2){
 							tmpBlock.first.x = tx;
 							tmpBlock.first.y = ty;
 							tmpBlock.second.x = i;
 							tmpBlock.second.y = j;
 						}
 
-						dropping(tmpBlock,'droppingAfterClear');
+						Board[i][j].colorId = 0;
+						Board[i][j].blockId = 0;
+						Board[i][j].number = 0;
+						Board[tx][ty].colorId = 0;
+						Board[tx][ty].blockId = 0;
+						Board[tx][ty].number = 0;
+
+						while(dropping(tmpBlock,'droppingAfterClear'));
 					}
 				}
 			}
@@ -215,6 +225,8 @@ function clearBlock(){
 				if(clearBlocks.length != 0){
 					droppingAfterClear();
 				}
+
+				console.log('done!');
 			}
 		}
 	}
@@ -246,12 +258,12 @@ function dropping(block,whereItCalled){
 					clearInterval(window.refreshId);
 				}
 			} else {
-				console.log('1\n\n');
+				//console.log('1\n\n');
 				updateBoard(oldBlock,block);
 
-				Board[block.first.x][block.first.y].colorId = block.colorId + 1;
+				Board[block.first.x][block.first.y].colorId = block.colorId;
 				Board[block.first.x][block.first.y].number = 1;
-				Board[block.second.x][block.second.y].colorId = block.colorId + 1;
+				Board[block.second.x][block.second.y].colorId = block.colorId;
 				Board[block.second.x][block.second.y].number = 2;
 
 				Board[block.first.x][block.first.y].blockId = block.blockId;
@@ -260,7 +272,9 @@ function dropping(block,whereItCalled){
 				if(whereItCalled == 'gameProcess'){
 					clearInterval(window.refreshId);
 					clearBlock();
-					gameProcess();
+					finish = true;
+				} else if(whereItCalled == 'droppingAfterClear'){
+					return false;
 				}
 				
 				//return newBlock : block;
@@ -272,23 +286,23 @@ function dropping(block,whereItCalled){
 			block.first.x += 1;
 			block.second.x += 1;
 
-			console.log('2\n\n');
-			console.log('old:\n')
-			console.log(oldBlock.first.x);
-			console.log(oldBlock.first.y);
-			console.log(oldBlock.second.x);
-			console.log(oldBlock.second.y + '\n\n');
+			// console.log('2\n\n');
+			// console.log('old:\n')
+			// console.log(oldBlock.first.x);
+			// console.log(oldBlock.first.y);
+			// console.log(oldBlock.second.x);
+			// console.log(oldBlock.second.y + '\n\n');
 
-			console.log('new:\n')
-			console.log(block.first.x);
-			console.log(block.first.y);
-			console.log(block.second.x);
-			console.log(block.second.y + '\n\n');
+			// console.log('new:\n')
+			// console.log(block.first.x);
+			// console.log(block.first.y);
+			// console.log(block.second.x);
+			// console.log(block.second.y + '\n\n');
 
 			updateBoard(oldBlock,block);
 
 			if(whereItCalled == 'droppingAfterClear'){
-				dropping(block,whereItCalled);
+				return true;
 			}
 
 			//return {newBlock : block,again : true};
@@ -311,9 +325,9 @@ function dropping(block,whereItCalled){
 			} else {
 				updateBoard(oldBlock,block);
 
-				Board[block.first.x][block.first.y].colorId = block.colorId + 1;
+				Board[block.first.x][block.first.y].colorId = block.colorId;
 				Board[block.first.x][block.first.y].number = 1;
-				Board[block.second.x][block.second.y].colorId = block.colorId + 1;
+				Board[block.second.x][block.second.y].colorId = block.colorId;
 				Board[block.second.x][block.second.y].number = 2;
 
 				Board[block.first.x][block.first.y].blockId = block.blockId;
@@ -322,8 +336,11 @@ function dropping(block,whereItCalled){
 				if(whereItCalled == 'gameProcess'){
 					clearInterval(window.refreshId);
 					clearBlock();
-					gameProcess();
+					finish = true;
+				} else if(whereItCalled == 'droppingAfterClear'){
+					return false;
 				}
+
 				//return {newBlock : block,again : false};
 			}
 
@@ -336,7 +353,7 @@ function dropping(block,whereItCalled){
 			updateBoard(oldBlock,block);
 
 			if(whereItCalled == 'droppingAfterClear'){
-				droppingAfterClear(block,whereItCalled);
+				return true;
 			}
 
 			//return {newBlock : block,again : true};
@@ -510,12 +527,15 @@ function updateBoard(oldBlock,block){
 //main function
 
 function gameProcess(){
-	//the block is dropping now
-	window.BLOCK = Object.assign({},createNewBlock());
-	let again = true;
 
-	window.refreshId = setInterval(dropping,1500,BLOCK,'gameProcess');
-	
+	if(finish){
+		finish = false;
+		//the block is dropping now
+		window.BLOCK = Object.assign({},createNewBlock());
+
+		window.refreshId = setInterval(dropping,1500,BLOCK,'gameProcess');
+	}
+	//console.log(finish);
 }
 
 //input from keyboard
@@ -528,11 +548,9 @@ window.addEventListener('keydown',function(key){
 		rotating(BLOCK);
 	}
 	//pause(?)
-})
-
+});
 
 
 init();
 
-gameProcess();
-//setInterval(gameProcess,500);
+setInterval(gameProcess,100);
