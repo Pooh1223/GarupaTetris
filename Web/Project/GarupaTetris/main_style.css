@@ -14,6 +14,19 @@
 	display: inline-block;
 	border: solid 1px rgba(0,0,0,1);
 	text-align: center;
+	background-size: contain;
+}
+
+.deg90{
+	-webkit-transform:rotate(270deg);
+}
+
+.deg180{
+	-webkit-transform:rotate(180deg);
+}
+
+.deg270{
+	-webkit-transform:rotate(90deg);
 }
 
 .info_board{

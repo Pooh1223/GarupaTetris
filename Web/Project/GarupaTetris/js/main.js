@@ -1,10 +1,28 @@
-const colors = ['#FFFFFF','#FF5151','#AE00AE','#0000C6','#02C874','#FF8000','#F9F900','#5B5B5B']
 //red,purple,blue,green,orange,yellow,gray
+const colors = ['#FFFFFF','#FF5151','#AE00AE','#0000C6','#02C874','#FF8000','#F9F900','#5B5B5B']
+
+// Poppin'Party, Afterglow, Pastel*Palettes, Roselia,
+// Raise A Suilen, Morfonica, Hello Happy World
+const Member = ['','Kasumi','Otae','Rimi','Saya','Arisa'
+,'Ran','Moka','Himari','Tomoe','Tsugu'
+,'Aya','Hina','Chisato','Maya','Eve'
+,'Yukina','Sayo','Lisa','Ako','Rinko'
+,'Layer','Rokka','Pareo','Masuki','Chuchu'
+,'Mashiro','Touko','Nanami','Tsukushi','Rui'
+,'Kokoro','Kaoru','Hagumi','Kanon','Misaki','Michelle']
+
+const MemberNum = [];
+const nextMember = [];
 
 //height,width per layer
 const Width = 7;
 const Height = 12;
+
+//variable to control flow
 var finish = true;
+
+//score
+var Score = 0;
 
 //first two row for negative position situation
 
@@ -37,47 +55,105 @@ function init(){
 	for(let i = 0;i < 45;++i){
 		BlockId.push(0);
 	}
-}
 
-function giveBlockId(){
-	for(let i = 1;i < 45;++i){
-		if(BlockId[i] == 0){
-			BlockId[i] = 1;
-			return i;
-		}
+	for(let i = 1;i <= 36;++i){
+		MemberNum.push(i);
 	}
+
+	Score = 0;
 }
 
-function giveColor(){
-	let index = Math.floor(Math.random() * Math.floor(7));
-	return index + 1;
+// function giveBlockId(){
+// 	let index = Math.floor(Math.random() * Math.floor(36));;
+
+// 	while(BlockId[index] == 1){
+// 		index = Math.floor(Math.random() * Math.floor(36));
+// 	}
+
+// 	return index + 1;
+
+// 	// for(let i = 1;i < 45;++i){
+// 	// 	if(BlockId[i] == 0){
+// 	// 		BlockId[i] = 1;
+// 	// 		return i;
+// 	// 	}
+// 	// }
+// }
+
+// function giveColor(){
+// 	let index = Math.floor(Math.random() * Math.floor(7));
+// 	return index + 1;
+// }
+
+function giveIdData(){
+	//pick a pos in MemberNum
+	let index = Math.floor(Math.random() * Math.floor(MemberNum.length));
+	let MemberId = MemberNum[index];
+
+	while(BlockId[MemberId] == 1){
+		MemberNum.splice(index,1);
+		
+		index = Math.floor(Math.random() * Math.floor(MemberNum.length));
+		MemberId = MemberNum[index];
+	}
+
+	BlockId[MemberId] = 1;
+	MemberNum.splice(index,1);
+
+	//colorId(BandId), BlockId
+	if(MemberId < 6){
+		return {colorId : 1,blockId : MemberId};
+	} else if(MemberId < 11){
+		return {colorId : 2,blockId : MemberId};
+	} else if(MemberId < 16){
+		return {colorId : 3,blockId : MemberId};
+	} else if(MemberId < 21){
+		return {colorId : 4,blockId : MemberId};
+	} else if(MemberId < 26){
+		return {colorId : 5,blockId : MemberId};
+	} else if(MemberId < 31){
+		return {colorId : 6,blockId : MemberId};
+	} else {
+		return {colorId : 7,blockId : MemberId};
+	}
 }
 
 function createNewBlock(){
 	//always vertical,0 for vertical, 1 for horizontal
-	let block = {
-		first : {x : 0,y : 3},
-		second : {x : 1,y : 3},
-		colorId : giveColor(),
-		blockId : giveBlockId(),
-		type : 0
-	};
-	return block;
+	console.log('createNewBlock : in');
+
+	while(nextMember.length < 2){
+		let tmp = giveIdData();
+		let block = {
+			first : {x : 0,y : 3},
+			second : {x : 1,y : 3},
+			colorId : tmp.colorId,
+			blockId : tmp.blockId,
+			deg : 0
+		};
+
+		nextMember.unshift(block);
+	}
+
+	//show next member 
+	
+	console.log('createNewBlock : out');
+	return nextMember.pop();
 }
 
 //validaty functions
 
-function checkAlive(nowHeight){
-	if(nowHeight < 8) return true;
-	else {
-		for(let i = 0;i < 2;++i){
-			for(let j = 0;j < Height;++j){
-				//Game over
-				if(Board[i][j].colorId != 0) return false;
-			}
-		}
-	}
-}
+// function checkAlive(nowHeight){
+// 	if(nowHeight < 8) return true;
+// 	else {
+// 		for(let i = 0;i < 2;++i){
+// 			for(let j = 0;j < Height;++j){
+// 				//Game over
+// 				if(Board[i][j].colorId != 0) return false;
+// 			}
+// 		}
+// 	}
+// }
 
 // clear blocks function
 
@@ -87,7 +163,8 @@ function boom(x,y){
 }
 
 function findBlock(stx,sty){
-	//used block
+	//used block (if this is a param, you can optimize it)
+	console.log('findBlock : in');
 	var tmpBoard = [];
 
 	//to store the past postion
@@ -130,7 +207,7 @@ function findBlock(stx,sty){
 			if(boom(tmp.x,tmp.y) == false && tmpBoard[tmp.x][tmp.y] == false
 				&& Board[tmp.x][tmp.y].colorId == coor.colorId){
 
-				console.log("in");
+				//console.log("in");
 				queue.unshift({x : tmp.x,y : tmp.y,colorId : coor.colorId});
 				posRecord.unshift({x : tmp.x,y : tmp.y});
 				tmpBoard[tmp.x][tmp.y] = true;
@@ -139,17 +216,30 @@ function findBlock(stx,sty){
 		}
 	}
 
-	console.log("pos : " + posRecord.length);
+	//console.log("pos : " + posRecord.length);
 
 	if(cnt >= 6){
 		//return the block pos that should be clear
+		//add the blocks that are ready to be clear back to choosable array
+		for(let i = 0;i < posRecord.length;++i){
+			let nx = posRecord[i].x;
+			let ny = posRecord[i].y;
+
+			if(MemberNum.indexOf(Board[nx][ny].blockId) == -1){
+				MemberNum.unshift(Board[nx][ny].blockId);
+			}
+		}
+
+		console.log('findBlock : out');
 		return posRecord;
 	} else {
+		console.log('findBlock : out');
 		return [];
 	}
 }
 
 function droppingAfterClear(){
+	console.log('droppingAfterClear : in');
 	const dx = [0,0,1,-1];
 	const dy = [1,-1,0,0];
 
@@ -170,7 +260,7 @@ function droppingAfterClear(){
 							second : {x : 0,y : 0},
 							colorId : Board[i][j].colorId,
 							blockId : Board[i][j].blockId,
-							type : (k < 2 ? 1 : 0)
+							deg : 0
 						};
 
 						//check which is first block
@@ -180,11 +270,43 @@ function droppingAfterClear(){
 							tmpBlock.first.y = j;
 							tmpBlock.second.x = tx;
 							tmpBlock.second.y = ty;
+
+							if(i != tx){
+								//vertical
+								if(i < tx){
+									tmpBlock.deg = 0;
+								} else {
+									tmpBlock.deg = 180;
+								}
+							} else {
+								//horizontal
+								if(j < ty){
+									tmpBlock.deg = 90;
+								} else {
+									tmpBlock.deg = 270;
+								}
+							}
 						} else if(Board[tx][ty].number == 1 && Board[i][j].number == 2){
 							tmpBlock.first.x = tx;
 							tmpBlock.first.y = ty;
 							tmpBlock.second.x = i;
 							tmpBlock.second.y = j;
+
+							if(i != tx){
+								//vertical
+								if(tx < i){
+									tmpBlock.deg = 0;
+								} else {
+									tmpBlock.deg = 180;
+								}
+							} else {
+								//horizontal
+								if(ty < j){
+									tmpBlock.deg = 90;
+								} else {
+									tmpBlock.deg = 270;
+								}
+							}
 						}
 
 						Board[i][j].colorId = 0;
@@ -200,10 +322,11 @@ function droppingAfterClear(){
 			}
 		}
 	}
+	console.log('droppingAfterClear : out');
 }
 
 function clearBlock(){
-
+	console.log('clearBlock : in');
 	for(let i = Height - 1;i >= 2;--i){
 		for(let j = 0;j < Width;++j){
 			if(Board[i][j].colorId != 0){
@@ -212,38 +335,55 @@ function clearBlock(){
 
 				for(let k = 0;k < clearBlocks.length;++k){
 					let tmp = Board[clearBlocks[k].x][clearBlocks[k].y].blockId;
+					let nx = clearBlocks[k].x;
+					let ny = clearBlocks[k].y;
 
 					BlockId[tmp] = 0;
-					Board[clearBlocks[k].x][clearBlocks[k].y].number = 0;
-					Board[clearBlocks[k].x][clearBlocks[k].y].blockId = 0;
-					Board[clearBlocks[k].x][clearBlocks[k].y].colorId = 0;
-					Board[clearBlocks[k].x][clearBlocks[k].y].link.style.backgroundColor = '#FFFFFF';
+					Board[nx][ny].number = 0;
+					Board[nx][ny].blockId = 0;
+					Board[nx][ny].colorId = 0;
+					//Board[nx][ny].link.style.backgroundColor = '#FFFFFF';
+					Board[nx][ny].link.style.backgroundImage = "url()"
+
+					if(Board[nx][ny].link.classList.contains("deg90")){
+						Board[nx][ny].link.classList.remove("deg90");
+					}
+
+					if(Board[nx][ny].link.classList.contains("deg180")){
+						Board[nx][ny].link.classList.remove("deg180");
+					}
+
+					if(Board[nx][ny].link.classList.contains("deg270")){
+						Board[nx][ny].link.classList.remove("deg270");
+					}
 				}
 
-				console.log("clearBlocks : " + String(clearBlocks.length));
+				//console.log("clearBlocks : " + String(clearBlocks.length));
 
 				if(clearBlocks.length != 0){
 					droppingAfterClear();
 				}
 
-				console.log('done!');
+				//console.log('done!');
 			}
 		}
 	}
+	console.log('clearBlock : out');
 }
 
 //moving blocks functions
 
 function dropping(block,whereItCalled){
+	console.log('dropping : in');
 	let oldBlock = {
 		first : {x : block.first.x,y : block.first.y},
 		second : {x : block.second.x,y : block.second.y},
 		colorId : block.colorId,
 		blockId : block.blockId,
-		type : block.type
+		deg : block.deg
 	};
 
-	if(block.type == 0){
+	if(block.deg % 180 == 0){
 		//vertivcal
 
 		if(block.first.x + 1 >= Height || block.second.x + 1 >= Height
@@ -274,6 +414,7 @@ function dropping(block,whereItCalled){
 					clearBlock();
 					finish = true;
 				} else if(whereItCalled == 'droppingAfterClear'){
+					console.log('dropping : out');
 					return false;
 				}
 				
@@ -302,6 +443,7 @@ function dropping(block,whereItCalled){
 			updateBoard(oldBlock,block);
 
 			if(whereItCalled == 'droppingAfterClear'){
+				console.log('dropping : out');
 				return true;
 			}
 
@@ -338,6 +480,7 @@ function dropping(block,whereItCalled){
 					clearBlock();
 					finish = true;
 				} else if(whereItCalled == 'droppingAfterClear'){
+					console.log('dropping : out');
 					return false;
 				}
 
@@ -353,13 +496,14 @@ function dropping(block,whereItCalled){
 			updateBoard(oldBlock,block);
 
 			if(whereItCalled == 'droppingAfterClear'){
+				console.log('dropping : out');
 				return true;
 			}
 
 			//return {newBlock : block,again : true};
 		}
 	}
-	
+	console.log('dropping : out');
 }
 
 function moving(block,keyCode){
@@ -368,13 +512,13 @@ function moving(block,keyCode){
 		second : {x : block.second.x,y : block.second.y},
 		colorId : block.colorId,
 		blockId : block.blockId,
-		type : block.type,
+		deg : block.deg,
 	};
 
 	if(keyCode == 37 || keyCode == 39){
 		//left , right
 
-		if(block.type == 0){
+		if(block.deg % 180 == 0){
 			//vertical
 			if(keyCode == 37){
 				if(block.first.y == 0 || Board[block.first.x][block.first.y - 1].colorId != 0
@@ -440,26 +584,30 @@ function moving(block,keyCode){
 }
 
 function rotating(block){
+	//can be optimized : if can't rotate 90 ,then try 180 or 270
 	let oldBlock = {
 		first : {x : block.first.x,y : block.first.y},
 		second : {x : block.second.x,y : block.second.y},
 		colorId : block.colorId,
 		blockId : block.blockId,
-		type : block.type,
+		deg : block.deg
 	};
 
-	if(block.type == 0){
+	if(block.deg % 180 == 0){
+		//vertical
 		if(block.first.x < block.second.x){
+			//deg 0 -> deg 90
 			if(block.first.y != Width - 1 && Board[block.first.x][block.first.y + 1].colorId == 0){
-				block.type = 1;
+				block.deg = 90;
 				block.second.x = block.first.x;
 				block.second.y = block.first.y + 1;
 
 				updateBoard(oldBlock,block);
 			}
 		} else {
+			//deg 180 -> deg 270
 			if(block.first.y != 0 && Board[block.first.x][block.first.y - 1].colorId == 0){
-				block.type = 1;
+				block.deg = 270;
 				block.second.x = block.first.x;
 				block.second.y = block.first.y - 1;
 
@@ -468,8 +616,9 @@ function rotating(block){
 		}
 	} else {
 		if(block.first.y < block.second.y){
+			//deg 90 -> deg 180
 			if(block.first.x != 0 && Board[block.first.x - 1][block.first.y].colorId == 0){
-				block.type = 0;
+				block.deg = 180;
 
 				block.second.x = block.first.x - 1;
 				block.second.y = block.first.y;
@@ -477,8 +626,9 @@ function rotating(block){
 				updateBoard(oldBlock,block);
 			}
 		} else {
+			//deg 270 -> deg 0
 			if(block.first.x != Height - 1 && Board[block.first.x + 1][block.first.y].colorId == 0){
-				block.type = 0;
+				block.deg = 0;
 
 				block.second.x = block.first.x + 1;
 				block.second.y = block.first.y;
@@ -492,20 +642,24 @@ function rotating(block){
 
 //painting functions
 
-function updateBoard(oldBlock,block){
-
+function updateBoard(oldBlock,block,degree){
+	console.log('updateBoard : in');
 	if(oldBlock.first.x > 1){
 		// Board[oldBlock.first.x][oldBlock.first.y].colorId = 0;
 		// Board[oldBlock.first.x][oldBlock.first.y].blockId = 0;
 		// Board[oldBlock.first.x][oldBlock.first.y].number = 0;
-		Board[oldBlock.first.x][oldBlock.first.y].link.style.backgroundColor = '#FFFFFF';
+		// Board[oldBlock.first.x][oldBlock.first.y].link.style.backgroundColor = '#FFFFFF';
+		Board[oldBlock.first.x][oldBlock.first.y].link.classList.remove('deg' + String(oldBlock.deg));
+		Board[oldBlock.first.x][oldBlock.first.y].link.style.backgroundImage = "url()";
 	}
 
 	if(oldBlock.second.x > 1){
 		// Board[oldBlock.second.x][oldBlock.second.y].colorId = 0;
 		// Board[oldBlock.second.x][oldBlock.second.y].blockId = 0;
 		// Board[oldBlock.second.x][oldBlock.second.y].number = 0;
-		Board[oldBlock.second.x][oldBlock.second.y].link.style.backgroundColor = '#FFFFFF';
+		// Board[oldBlock.second.x][oldBlock.second.y].link.style.backgroundColor = '#FFFFFF';
+		Board[oldBlock.second.x][oldBlock.second.y].link.classList.remove('deg' + String(oldBlock.deg));
+		Board[oldBlock.second.x][oldBlock.second.y].link.style.backgroundImage = "url()";
 	} 
 
 	//paint new block's color
@@ -513,15 +667,23 @@ function updateBoard(oldBlock,block){
 		// Board[block.first.x][block.first.y].colorId = block.colorId;
 		// Board[block.first.x][block.first.y].blockId = block.blockId;
 		// Board[block.first.x][block.first.y].number = 1;
-		Board[block.first.x][block.first.y].link.style.backgroundColor = colors[block.colorId];
+		// Board[block.first.x][block.first.y].link.style.backgroundColor = colors[block.colorId];
+		Board[block.first.x][block.first.y].link.classList.add('deg' + String(block.deg));
+		Board[block.first.x][block.first.y].link.style.backgroundImage
+	 	= "url(./res/" + Member[block.blockId] + "-1.jpg)";
 	}
 	
 	if(block.second.x > 1){
 		// Board[block.second.x][block.second.y].colorId = block.colorId;
 		// Board[block.second.x][block.second.y].blockId = block.blockId;
 		// Board[block.second.x][block.second.y].number = 2;
-		Board[block.second.x][block.second.y].link.style.backgroundColor = colors[block.colorId];
-	}	
+		// Board[block.second.x][block.second.y].link.style.backgroundColor = colors[block.colorId];
+		Board[block.second.x][block.second.y].link.classList.add('deg' + String(block.deg));
+		Board[block.second.x][block.second.y].link.style.backgroundImage
+		 = "url(./res/" + Member[block.blockId] + "-2.jpg)";
+	}
+	//console.log(block.blockId + " : " + Member[block.blockId]);
+	console.log('updateBoard : out');
 }
 
 //main function
@@ -541,7 +703,7 @@ function gameProcess(){
 //input from keyboard
 
 window.addEventListener('keydown',function(key){
-	console.log(key.keyCode);
+	//console.log(key.keyCode);
 	if(key.keyCode >= 37 && key.keyCode <= 40){
 		moving(BLOCK,key.keyCode);
 	} else if(key.keyCode == 32){
@@ -554,3 +716,11 @@ window.addEventListener('keydown',function(key){
 init();
 
 setInterval(gameProcess,100);
+
+//problem:
+//stuck on createNewBlock, maybe wrong at MemberId?
+
+//todo:
+//show next block (maybe use queue to generate one more block standby)
+//score
+//photo should consider the black line px
